@@ -2,13 +2,23 @@ import csv, io, os, sys
 
 import requests
 from requests_ntlm import HttpNtlmAuth
+from argparse import ArgumentParser
 
 UTF8_BOM = "ï»¿"
 
 
 def main():
-    outdir = sys.argv[1]
-    if not outdir:
+    parser = ArgumentParser()
+    parser.add_argument("outdir", help="path to output directory")
+    parser.add_argument(
+        "--clobber",
+        action="store_true",
+        help="overwrite existing documents at same path",
+    )
+
+    args = parser.parse_args()
+
+    if not args.outdir:
         print("must specify outdir as first argument", file=sys.stderr)
         exit(1)
 
@@ -52,7 +62,11 @@ def main():
         source_url = f"/{path}/{file_name}"
         response = session.get(host, params={"SourceUrl": source_url})
 
-        outpath = os.path.join(outdir, file_name)
+        outpath = os.path.join(args.outdir, file_name)
+        if not args.clobber and os.path.exists(outpath):
+            print("File exists, skipping", file=sys.stderr)
+            continue
+
         with open(outpath, "w") as outfile:
             outfile.write(response.text.removeprefix(UTF8_BOM))
 

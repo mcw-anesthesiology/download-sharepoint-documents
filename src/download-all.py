@@ -56,16 +56,16 @@ def main():
 
         file_name = row["Name"]
         path = row["Path"]
+        outpath = os.path.join(args.outdir, file_name)
 
         print(f"[{i + 1} / {rows_len}]: {file_name}")
 
-        source_url = f"/{path}/{file_name}"
-        response = session.get(host, params={"SourceUrl": source_url})
-
-        outpath = os.path.join(args.outdir, file_name)
         if not args.clobber and os.path.exists(outpath):
             print("File exists, skipping", file=sys.stderr)
             continue
+
+        source_url = f"/{path}/{file_name}"
+        response = session.get(host, params={"SourceUrl": source_url})
 
         with open(outpath, "w") as outfile:
             outfile.write(response.text.removeprefix(UTF8_BOM))
